@@ -130,7 +130,10 @@ with pages[2]:
     )
     st.caption('Muốn tái lập thí nghiệm mua lại, hãy chạy phần Mô hình 1 trong Notebook_nguon_Olist.ipynb.')
     st.markdown('#### Phân khúc RFM bằng K-Means')
-    if customers is not None and orders is not None and 'customer_id' in customers and {'customer_id','order_id','order_purchase_timestamp'}.issubset(orders.columns):
+    # Nạp bảng customers rõ ràng trong tab ML; trước đây biến này chưa được khởi tạo,
+    # gây NameError khi Streamlit chạy đến phần phân khúc RFM.
+    customers = get_df('olist_customers_dataset')
+    if customers is not None and orders is not None and 'customer_id' in customers.columns and {'customer_id','order_id','order_purchase_timestamp'}.issubset(orders.columns):
         o=orders.copy(); o['order_purchase_timestamp']=pd.to_datetime(o.order_purchase_timestamp,errors='coerce')
         d=o.merge(customers[['customer_id','customer_unique_id']],on='customer_id',how='left').dropna(subset=['customer_unique_id','order_purchase_timestamp'])
         ref=d.order_purchase_timestamp.max(); r=d.groupby('customer_unique_id').agg(recency=('order_purchase_timestamp',lambda s:(ref-s.max()).days),frequency=('order_id','nunique')).reset_index()
