@@ -1,3 +1,10 @@
+-- OLIST E-COMMERCE ANALYSIS — PostgreSQL
+-- Đồng bộ với notebook Olist_Analytics_ML.ipynb.
+-- Chú ý: một số kết quả notebook dùng bộ lọc khác nhau giữa các câu hỏi;
+-- hãy kiểm tra định nghĩa trước khi so sánh KPI giữa truy vấn.
+-- Không đưa payment_value vào phép SUM sau khi join trực tiếp với order_items.
+-- Dataset không có cost đầy đủ, nên freight/revenue KHÔNG phải profit margin.
+
 -- OLIST E-COMMERCE ANALYSIS — PostgreSQL edition
 -- Bộ truy vấn viết lại theo 14 BUSINESS QUESTIONS trong README của bộ tài liệu.
 -- Giả định các bảng nằm trong schema public và tên cột giống bộ dữ liệu Olist đã nhập.

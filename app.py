@@ -88,7 +88,7 @@ with pages[0]:
         orders=orders.copy()
         if 'order_purchase_timestamp' in orders: orders['order_purchase_timestamp']=pd.to_datetime(orders['order_purchase_timestamp'],errors='coerce')
         a,b=st.columns(2); a.metric('Tổng đơn hàng',f'{orders.order_id.nunique():,}' if 'order_id' in orders else f'{len(orders):,}')
-        if 'order_status' in orders: b.metric('Đơn đã hủy',f'{(orders.order_status=='canceled').sum():,}')
+        if 'order_status' in orders: b.metric("Đơn đã hủy", f"{(orders.order_status == 'canceled').sum():,}")
         if 'order_purchase_timestamp' in orders:
             monthly=orders.dropna(subset=['order_purchase_timestamp']).assign(month=lambda x:x.order_purchase_timestamp.dt.to_period('M').astype(str)).groupby('month').size().rename('orders').reset_index()
             st.plotly_chart(px.line(monthly,x='month',y='orders',title='Số đơn theo tháng'),use_container_width=True)
@@ -120,21 +120,15 @@ with pages[1]:
 
 with pages[2]:
     st.subheader('Thử nghiệm Machine Learning')
-    st.warning('Mô hình cần đúng dữ liệu và nhãn; kết quả trên CSV tải lên chỉ là thực nghiệm, không đảm bảo hiệu năng triển khai thực tế.')
-    customers=get_df('olist_customers_dataset'); orders=get_df('olist_orders_dataset'); payments=get_df('olist_order_payments_dataset')
-    if customers is not None and orders is not None and {'customer_id','customer_unique_id'}.issubset(customers.columns) and {'customer_id','order_id'}.issubset(orders.columns):
-        st.markdown('#### Dự đoán khách hàng mua lại')
-        merged=orders.merge(customers[['customer_id','customer_unique_id']],on='customer_id',how='left')
-        counts=merged.groupby('customer_unique_id').order_id.nunique().rename('order_count')
-        feat=merged.groupby('customer_unique_id').agg(total_orders=('order_id','nunique')).join(counts).reset_index()
-        feat['repeat_label']=(feat['total_orders']>1).astype(int)
-        if feat.repeat_label.nunique()>1 and len(feat)>=30:
-            X=feat[['total_orders']]; y=feat['repeat_label']
-            Xtr,Xte,ytr,yte=train_test_split(X,y,test_size=.25,random_state=42,stratify=y)
-            model=RandomForestClassifier(n_estimators=150,random_state=42,class_weight='balanced'); model.fit(Xtr,ytr); pred=model.predict(Xte)
-            st.metric('Accuracy (demo)',f'{accuracy_score(yte,pred):.3f}'); st.text(classification_report(yte,pred,zero_division=0))
-        else: st.info('Không đủ số lượng/độ đa dạng nhãn để huấn luyện mô hình demo.')
-    else: st.info('Để chạy mô hình mua lại, cần bảng customers và orders với các cột customer_id, customer_unique_id, order_id.')
+    st.warning('Đây là demo nhanh trên dữ liệu đang tải; không tương đương pipeline ML đã đánh giá theo thời gian trong notebook. Với nhãn mua lại hiếm, accuracy đơn lẻ có thể gây hiểu nhầm.')
+    st.markdown('#### Dự đoán khách hàng mua lại')
+    st.info(
+        'Kết quả đánh giá theo thời gian của notebook nguồn: nhãn mua lại trong 90 ngày có tỷ lệ dương 2,03%; '
+        'trên tập test, precision = 0,0549, recall = 0,0518, F1 = 0,0533, ROC-AUC = 0,5506 và PR-AUC = 0,0231. '
+        'Baseline luôn dự đoán không mua lại đạt accuracy 0,9834. Vì nhãn rất mất cân bằng, accuracy không đủ '
+        'để đánh giá mô hình. Không huấn luyện lại mô hình demo dùng tổng số đơn làm đặc trưng vì có nguy cơ rò rỉ nhãn.'
+    )
+    st.caption('Muốn tái lập thí nghiệm mua lại, hãy chạy phần Mô hình 1 trong Notebook_nguon_Olist.ipynb.')
     st.markdown('#### Phân khúc RFM bằng K-Means')
     if customers is not None and orders is not None and 'customer_id' in customers and {'customer_id','order_id','order_purchase_timestamp'}.issubset(orders.columns):
         o=orders.copy(); o['order_purchase_timestamp']=pd.to_datetime(o.order_purchase_timestamp,errors='coerce')
